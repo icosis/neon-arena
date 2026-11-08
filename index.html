@@ -3,103 +3,110 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Neon Arena</title>
+<title>Scribble Arena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Patrick+Hand&display=swap" rel="stylesheet">
 <style>
-  :root { --cyan:#35e6ff; --pink:#ff3d9a; --ink:#e8f6ff; --bg:#05070f; }
+  :root { --ink:#1b1b2f; --paper:#fbf7ea; --bg:#f3eedd; --blue:#2a4bd7; --red:#e0343f; --yellow:#ffe066; --green:#2fa84f; }
   * { box-sizing: border-box; }
   html, body { margin:0; height:100%; background:var(--bg); overflow:hidden; color:var(--ink);
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif; user-select:none; }
+    font-family: "Patrick Hand", "Comic Sans MS", "Segoe Print", "Bradley Hand", cursive, sans-serif; font-size:18px; user-select:none; }
   canvas#c { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  .sketch { border-radius:255px 15px 225px 15px / 15px 225px 15px 255px; }
 
   #hud { position:fixed; inset:0; pointer-events:none; }
-  .hudbox { position:absolute; font-weight:700; letter-spacing:.06em; text-shadow:0 0 8px rgba(53,230,255,.6), 0 2px 0 #000; }
-  #topLeft { top:16px; left:20px; font-size:20px; }
-  #topRight { top:16px; right:20px; font-size:20px; text-align:right; }
-  #topLeft small, #topRight small { display:block; font-size:12px; opacity:.7; font-weight:600; }
-  #feed { position:absolute; top:84px; right:20px; text-align:right; font-weight:700; font-size:14px; letter-spacing:.05em; text-shadow:0 2px 0 #000; }
+  .hudbox { position:absolute; font-weight:700; letter-spacing:.04em;
+    text-shadow:2px 2px 0 var(--paper), -2px -2px 0 var(--paper), 2px -2px 0 var(--paper), -2px 2px 0 var(--paper), 0 2px 0 var(--paper), 0 -2px 0 var(--paper), 2px 0 0 var(--paper), -2px 0 0 var(--paper); }
+  #topLeft { top:14px; left:20px; font-size:30px; }
+  #topRight { top:14px; right:20px; font-size:30px; text-align:right; }
+  #topLeft small, #topRight small { display:block; font-size:16px; opacity:.8; font-weight:400; }
+  #fps { position:absolute; top:8px; left:50%; transform:translateX(-50%); font-size:14px; color:var(--blue); display:none; }
+  #feed { position:absolute; top:92px; right:20px; text-align:right; font-weight:700; font-size:18px; color:var(--ink);
+    text-shadow:2px 2px 0 var(--paper), -2px -2px 0 var(--paper), 2px -2px 0 var(--paper), -2px 2px 0 var(--paper); }
   #feed div { margin-bottom:3px; animation:feedIn .15s ease-out; }
-  #feed .head { color:#ff5a5a; } #feed .streak { color:#ffd23f; font-size:17px; } #feed .good { color:#3dff7a; } #feed .xp { color:var(--cyan); }
+  #feed .head { color:var(--red); } #feed .streak { color:var(--blue); font-size:24px; } #feed .good { color:var(--green); } #feed .xp { color:var(--blue); }
   @keyframes feedIn { from { opacity:0; transform:translateX(14px); } to { opacity:1; transform:none; } }
-  #bottomLeft { bottom:22px; left:20px; width:260px; }
+  #bottomLeft { bottom:22px; left:20px; width:270px; font-size:22px; }
   #bottomRight { bottom:18px; right:24px; text-align:right; }
-  #hpBar { height:16px; border:2px solid var(--cyan); border-radius:10px; overflow:hidden; background:rgba(0,0,0,.55); margin-top:6px; }
-  #hpFill { height:100%; width:100%; background:linear-gradient(90deg,#1fff9a,#35e6ff); transition:width .12s; }
-  #hpFill.low { background:linear-gradient(90deg,#ff3d3d,#ff9a3d); }
-  #shBar { height:7px; border-radius:6px; overflow:hidden; background:rgba(0,0,0,.45); margin-top:4px; }
-  #shFill { height:100%; width:0; background:#6d8bff; }
-  #effects { position:absolute; bottom:96px; left:20px; font-size:13px; font-weight:700; letter-spacing:.06em; color:#ffd23f; text-shadow:0 2px 0 #000; }
-  #weaponName { font-size:14px; opacity:.8; }
+  #hpBar { height:20px; border:3px solid var(--ink); border-radius:12px 4px 12px 4px; overflow:hidden; background:var(--paper); margin-top:6px; }
+  #hpFill { height:100%; width:100%; background:#5ccf7a; transition:width .12s; }
+  #hpFill.low { background:var(--red); }
+  #shBar { height:9px; border:2px solid var(--ink); border-radius:6px; overflow:hidden; background:var(--paper); margin-top:5px; }
+  #shFill { height:100%; width:0; background:#7b8cff; }
+  #effects { position:absolute; bottom:104px; left:20px; font-size:18px; font-weight:700; color:var(--blue); }
+  #weaponName { font-size:20px; }
   #ammoRow { line-height:1; }
-  #ammo { font-size:44px; }
-  #reserve { font-size:20px; opacity:.65; }
-  #reloadText { font-size:14px; color:#ffd23f; height:18px; }
-  #grenText { font-size:13px; opacity:.85; margin-top:4px; }
-  #slots { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); display:flex; gap:6px; }
-  .slot { padding:5px 10px; border:2px solid rgba(53,230,255,.25); border-radius:8px; font-size:12px; font-weight:700; letter-spacing:.06em;
-    background:rgba(0,0,0,.45); opacity:.4; }
-  .slot.own { opacity:.85; } .slot.cur { opacity:1; border-color:var(--cyan); background:rgba(53,230,255,.2); }
+  #ammo { font-size:58px; }
+  #reserve { font-size:26px; opacity:.7; }
+  #reloadText { font-size:20px; color:var(--red); height:24px; }
+  #grenText { font-size:17px; margin-top:4px; }
+  #slots { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); display:flex; gap:7px; }
+  .slot { padding:4px 11px; border:3px solid var(--ink); border-radius:10px 4px 10px 4px; font-size:16px; font-weight:700;
+    background:var(--paper); opacity:.55; }
+  .slot.own { opacity:.9; } .slot.cur { opacity:1; background:var(--yellow); box-shadow:3px 3px 0 var(--ink); }
   #crosshair { position:absolute; left:50%; top:50%; width:0; height:0; }
-  #crosshair i { position:absolute; background:#fff; box-shadow:0 0 4px #000; }
-  #crosshair i:nth-child(1) { left:-1px; top:-16px; width:2px; height:9px; }
-  #crosshair i:nth-child(2) { left:-1px; top:7px; width:2px; height:9px; }
-  #crosshair i:nth-child(3) { left:-16px; top:-1px; width:9px; height:2px; }
-  #crosshair i:nth-child(4) { left:7px; top:-1px; width:9px; height:2px; }
-  #hitmarker { position:absolute; left:50%; top:50%; width:26px; height:26px; margin:-13px 0 0 -13px; opacity:0; transition:opacity .12s; }
-  #hitmarker::before, #hitmarker::after { content:""; position:absolute; left:50%; top:-4px; width:3px; height:34px; margin-left:-1px; background:#fff; transform:rotate(45deg); }
+  #crosshair i { position:absolute; background:var(--ink); box-shadow:0 0 0 1.5px var(--paper); }
+  #crosshair i:nth-child(1) { left:-1px; top:-16px; width:3px; height:9px; }
+  #crosshair i:nth-child(2) { left:-1px; top:7px; width:3px; height:9px; }
+  #crosshair i:nth-child(3) { left:-16px; top:-1px; width:9px; height:3px; }
+  #crosshair i:nth-child(4) { left:7px; top:-1px; width:9px; height:3px; }
+  #hitmarker { position:absolute; left:50%; top:50%; width:28px; height:28px; margin:-14px 0 0 -14px; opacity:0; transition:opacity .12s; }
+  #hitmarker::before, #hitmarker::after { content:""; position:absolute; left:50%; top:-5px; width:4px; height:38px; margin-left:-2px; background:var(--ink); transform:rotate(45deg); }
   #hitmarker::after { transform:rotate(-45deg); }
-  #hitmarker.head::before, #hitmarker.head::after { background:#ff3d3d; }
+  #hitmarker.head::before, #hitmarker.head::after { background:var(--red); }
   #hitmarker.show { opacity:1; transition:none; }
   #scope { position:absolute; inset:0; display:none;
-    background:radial-gradient(circle at center, rgba(0,0,0,0) 0, rgba(0,0,0,0) 24vmin, #000 24.4vmin); }
-  #scope::before, #scope::after { content:""; position:absolute; background:rgba(0,0,0,.85); }
-  #scope::before { left:50%; top:calc(50% - 24vmin); width:1px; height:48vmin; }
-  #scope::after { top:50%; left:calc(50% - 24vmin); height:1px; width:48vmin; }
-  #hurt { position:absolute; inset:0; background:radial-gradient(ellipse at center, rgba(255,0,40,0) 40%, rgba(255,0,40,.75) 100%); opacity:0; transition:opacity .35s; }
-  #banner { position:absolute; left:0; right:0; top:22%; text-align:center; font-size:56px; font-weight:800; letter-spacing:.12em;
-    color:var(--cyan); text-shadow:0 0 24px rgba(53,230,255,.8); opacity:0; transition:opacity .4s; }
+    background:radial-gradient(circle at center, rgba(0,0,0,0) 0, rgba(0,0,0,0) 24vmin, var(--ink) 24.4vmin); }
+  #scope::before, #scope::after { content:""; position:absolute; background:rgba(27,27,47,.8); }
+  #scope::before { left:50%; top:calc(50% - 24vmin); width:2px; height:48vmin; }
+  #scope::after { top:50%; left:calc(50% - 24vmin); height:2px; width:48vmin; }
+  #hurt { position:absolute; inset:0; background:radial-gradient(ellipse at center, rgba(224,52,63,0) 40%, rgba(224,52,63,.7) 100%); opacity:0; transition:opacity .35s; }
+  #banner { position:absolute; left:0; right:0; top:20%; text-align:center; font-family:"Caveat Brush","Patrick Hand","Comic Sans MS",cursive; font-size:76px; font-weight:400;
+    color:var(--ink); -webkit-text-stroke:7px var(--paper); paint-order:stroke fill; transform:rotate(-3deg); opacity:0; transition:opacity .4s; }
   #banner.show { opacity:1; transition:none; }
 
-  #menu { position:fixed; inset:0; display:flex; overflow:auto; text-align:center;
-    background:radial-gradient(ellipse at center, rgba(8,14,34,.86), rgba(3,5,12,.97)); padding:20px; }
+  #menu { position:fixed; inset:0; display:flex; overflow:auto; text-align:center; padding:20px;
+    background-color:rgba(251,247,234,.94);
+    background-image:linear-gradient(rgba(42,75,215,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(42,75,215,.14) 1px, transparent 1px);
+    background-size:32px 32px; }
   #menu.hidden { display:none; }
   #panel { margin:auto; width:min(900px,100%); display:flex; flex-direction:column; align-items:center; }
-  #menu h1 { margin:0; font-size:clamp(44px,9vw,92px); letter-spacing:.14em; font-weight:900;
-    background:linear-gradient(90deg,var(--cyan),var(--pink)); -webkit-background-clip:text; background-clip:text; color:transparent;
-    filter:drop-shadow(0 0 18px rgba(53,230,255,.45)); }
-  #menuSub { margin:10px 0 18px; font-size:19px; opacity:.85; max-width:700px; }
-  .btn { padding:13px 38px; border-radius:999px; border:2px solid var(--cyan); color:var(--cyan); font-weight:800; font-size:20px;
-    letter-spacing:.1em; background:rgba(53,230,255,.08); cursor:pointer; }
-  .btn:hover { background:rgba(53,230,255,.22); }
-  #quitBtn { display:none; margin-top:12px; font-size:15px; padding:9px 26px; border-color:var(--pink); color:var(--pink); background:rgba(255,61,154,.08); }
-  #quitBtn:hover { background:rgba(255,61,154,.22); }
+  #menu h1 { margin:0; font-family:"Caveat Brush","Patrick Hand","Comic Sans MS",cursive; font-weight:400; font-size:clamp(54px,10vw,112px); letter-spacing:.04em;
+    color:var(--ink); text-shadow:5px 5px 0 var(--yellow); transform:rotate(-2deg); }
+  #menuSub { margin:8px 0 18px; font-size:22px; max-width:720px; }
+  .btn { padding:10px 38px; border:4px solid var(--ink); color:var(--ink); font-weight:700; font-size:28px; letter-spacing:.04em;
+    background:var(--yellow); cursor:pointer; box-shadow:5px 5px 0 var(--ink); border-radius:255px 15px 225px 15px / 15px 225px 15px 255px; transition:transform .08s, box-shadow .08s; }
+  .btn:hover { transform:translate(2px,2px); box-shadow:3px 3px 0 var(--ink); }
+  #quitBtn { display:none; margin-top:14px; font-size:20px; padding:6px 26px; background:#ffb3ba; }
   #menu.paused #quitBtn { display:block; }
   #setup { display:grid; grid-template-columns:auto 1fr; gap:10px 16px; align-items:center; text-align:left; margin-top:24px; }
   #menu.paused #setup, #menu.paused #info { display:none; }
-  .lbl { font-size:12px; letter-spacing:.16em; opacity:.65; font-weight:700; }
-  .pills { display:flex; gap:8px; flex-wrap:wrap; }
-  .pill { padding:7px 14px; border:2px solid rgba(53,230,255,.35); border-radius:999px; font-weight:700; font-size:14px; letter-spacing:.05em;
-    cursor:pointer; background:rgba(53,230,255,.05); }
-  .pill:hover { background:rgba(53,230,255,.16); }
-  .pill.on { border-color:var(--cyan); background:rgba(53,230,255,.24); color:#fff; }
-  .pill.locked { opacity:.35; cursor:not-allowed; }
-  #modeDesc { grid-column:1 / -1; font-size:14px; opacity:.75; margin-top:-2px; }
-  #info { display:flex; gap:18px; flex-wrap:wrap; justify-content:center; margin-top:20px; text-align:left; }
-  .card { background:rgba(255,255,255,.04); border:1px solid rgba(53,230,255,.25); border-radius:14px; padding:14px 18px; min-width:250px; font-size:14px; }
-  .card h3 { margin:0 0 8px; font-size:12px; letter-spacing:.16em; opacity:.65; }
-  #xpBar { height:9px; border-radius:6px; background:rgba(0,0,0,.5); overflow:hidden; margin:6px 0 8px; }
-  #xpFill { height:100%; width:0; background:linear-gradient(90deg,var(--cyan),var(--pink)); }
-  #board { margin:0; padding-left:20px; } #board li { margin:2px 0; } #board .dim { opacity:.55; }
-  #controls { margin-top:20px; display:grid; grid-template-columns:auto auto auto; gap:6px 24px; text-align:left; font-size:14px; opacity:.85; }
-  #controls b { color:var(--cyan); font-weight:700; }
-  #settings { margin-top:18px; display:flex; gap:22px; flex-wrap:wrap; justify-content:center; font-size:14px; opacity:.9; }
-  #settings input { vertical-align:middle; width:120px; }
-  #best { margin-top:14px; font-size:14px; opacity:.7; }
+  .lbl { font-size:16px; letter-spacing:.14em; opacity:.7; font-weight:700; }
+  .pills { display:flex; gap:9px; flex-wrap:wrap; }
+  .pill { padding:4px 15px; border:3px solid var(--ink); border-radius:14px 5px 14px 5px; font-weight:700; font-size:19px;
+    cursor:pointer; background:var(--paper); }
+  .pill:hover { background:#fff3b0; }
+  .pill.on { background:var(--yellow); box-shadow:3px 3px 0 var(--ink); }
+  .pill.locked { opacity:.4; cursor:not-allowed; }
+  #modeDesc { grid-column:1 / -1; font-size:18px; opacity:.8; margin-top:-2px; }
+  #info { display:flex; gap:18px; flex-wrap:wrap; justify-content:center; margin-top:22px; text-align:left; }
+  .card { background:var(--paper); border:3px solid var(--ink); border-radius:18px 6px 18px 6px; padding:14px 18px; min-width:260px; font-size:18px; box-shadow:5px 5px 0 rgba(27,27,47,.85); }
+  .card h3 { margin:0 0 8px; font-size:16px; letter-spacing:.14em; opacity:.7; }
+  #xpBar { height:12px; border:2px solid var(--ink); border-radius:8px; background:var(--paper); overflow:hidden; margin:6px 0 8px; }
+  #xpFill { height:100%; width:0; background:var(--blue); }
+  #board { margin:0; padding-left:22px; } #board li { margin:2px 0; } #board .dim { opacity:.55; }
+  #controls { margin-top:22px; display:grid; grid-template-columns:auto auto auto; gap:6px 26px; text-align:left; font-size:18px; }
+  #controls b { color:var(--blue); font-weight:700; }
+  #settings { margin-top:18px; display:flex; gap:24px; flex-wrap:wrap; justify-content:center; font-size:18px; }
+  #settings input { vertical-align:middle; width:120px; accent-color:var(--blue); }
+  #best { margin-top:14px; font-size:16px; opacity:.7; }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 
 <div id="hud">
+  <div id="fps"></div>
   <div id="hurt"></div>
   <div id="scope"></div>
   <div id="topLeft" class="hudbox"><span id="waveText">WAVE 1</span><small id="scoreText">SCORE 0</small></div>
@@ -119,7 +126,7 @@
 
 <div id="menu">
  <div id="panel">
-  <h1>NEON ARENA</h1>
+  <h1>SCRIBBLE ARENA</h1>
   <div id="menuSub">Pick a mode, then drop in. Aim for the head.</div>
   <div id="startBtn" class="btn">CLICK TO PLAY</div>
   <div id="quitBtn" class="btn">END RUN</div>
@@ -138,6 +145,7 @@
     <span><b>WASD</b> move</span><span><b>Shift</b> sprint</span><span><b>Space</b> jump</span>
     <span><b>Click</b> shoot</span><span><b>Right click</b> aim / scope</span><span><b>R</b> reload</span>
     <span><b>1-5 / Wheel</b> weapon</span><span><b>G</b> grenade</span><span><b>Esc</b> pause</span>
+    <span><b>F</b> show fps</span>
   </div>
   <div id="settings">
     <span>Sensitivity <input id="sens" type="range" min="1" max="10" step="1" value="5"></span>
@@ -183,7 +191,7 @@ const rnd = (a) => a[Math.floor(Math.random() * a.length)];
 
 // ------------------------------------------------------------------ data: modes, maps, difficulty, skins
 const MODES = {
-  survival: { name: 'SURVIVAL', desc: 'Endless waves. Every 5th wave brings a boss. Clearing a wave heals you and drops a weapon crate.' },
+  survival: { name: 'SURVIVAL', desc: 'Endless waves. Every 5th wave brings a boss. Clearing a wave heals you and drops a power-up.' },
   time: { name: 'TIME ATTACK', desc: '90 seconds on the clock and every kill adds 1.5 more. Bots keep coming faster. Score as much as you can.' },
   dm: { name: 'DEATHMATCH', desc: 'First to ' + DM_KILLS + ' kills wins. You respawn after each death, but ' + DM_DEATHS + ' deaths and the bots win.' },
 };
@@ -193,30 +201,30 @@ const DIFFS = {
   hard: { name: 'HARD', hp: 1.45, dmg: 1.4 },
 };
 const SKINS = [
-  { name: 'CYAN', color: 0x35e6ff, lv: 1 },
-  { name: 'PINK', color: 0xff3d9a, lv: 2 },
-  { name: 'GOLD', color: 0xffd23f, lv: 4 },
-  { name: 'LIME', color: 0x7dff3d, lv: 6 },
-  { name: 'VIOLET', color: 0xb15cff, lv: 9 },
+  { name: 'BLUE PEN', color: 0x2a4bd7, lv: 1 },
+  { name: 'RED PEN', color: 0xe0343f, lv: 2 },
+  { name: 'GREEN PEN', color: 0x2fa84f, lv: 4 },
+  { name: 'PURPLE PEN', color: 0x7b3fe4, lv: 6 },
+  { name: 'ORANGE PEN', color: 0xf08a1c, lv: 9 },
 ];
 // Boxes are [x, z, w, d, h]. They are full height, so collision and line of sight stay 2D.
 const MAPS = [
-  { name: 'GRID', bg: 0x101a40, floor: '#1f2f6e', line: '53,230,255', wall: 0x24347a, edge: 0x35e6ff,
-    c1: [0x2a4a8a, 0x35e6ff], c2: [0x5a2a6e, 0xff3d9a], spawn: [0, 8],
+  { name: 'GRAPH', bg: 0xf3eedd, floor: '#f7f3e3', line: '70,120,200', style: 'graph', wall: 0xc9d6ff, edge: 0,
+    c1: [0x9db8ff, 0], c2: [0xffb3c7, 0], spawn: [0, 8],
     boxes: [
       [-10, -6, 4, 4, 3], [10, -8, 4, 4, 3], [0, -14, 6, 2, 3], [-16, 6, 2, 8, 3], [16, 4, 2, 8, 3],
       [0, 2, 3, 3, 2], [-8, 14, 4, 2, 2.5], [9, 15, 4, 2, 2.5], [-22, -16, 3, 3, 3], [22, -18, 3, 3, 3],
       [-24, 20, 3, 3, 3], [24, 18, 3, 3, 3], [-4, -25, 2, 6, 3], [6, -23, 2, 6, 3],
     ] },
-  { name: 'PILLARS', bg: 0x2a1546, floor: '#3a2068', line: '255,61,154', wall: 0x4a2470, edge: 0xff3d9a,
-    c1: [0x6a2f8a, 0xff3d9a], c2: [0x2f4f9a, 0x35e6ff], spawn: [5, 5],
+  { name: 'NOTEBOOK', bg: 0xf8edaa, floor: '#fbf2b0', line: '60,110,210', style: 'lined', wall: 0xffd0e0, edge: 0,
+    c1: [0xffa8c8, 0], c2: [0xa8d4ff, 0], spawn: [5, 5],
     boxes: (() => {
       const out = [];
       for (const x of [-20, -10, 0, 10, 20]) for (const z of [-20, -10, 0, 10, 20]) if (x || z) out.push([x, z, 2, 2, 4]);
       return out;
     })() },
-  { name: 'COURTYARD', bg: 0x0f2a2a, floor: '#175046', line: '61,255,160', wall: 0x1c5a4a, edge: 0x3dffa0,
-    c1: [0x2a7a5a, 0x3dffa0], c2: [0x7a6a2a, 0xffd23f], spawn: [6, 6],
+  { name: 'KRAFT', bg: 0xdcc49a, floor: '#e2c99a', line: '120,80,40', style: 'graph', wall: 0xbfe3c8, edge: 0,
+    c1: [0x9fd8b0, 0], c2: [0xffd98a, 0], spawn: [6, 6],
     boxes: [
       [-11, 0, 14, 2, 3], [11, 0, 14, 2, 3], [0, -11, 2, 14, 3], [0, 13, 2, 10, 3],
       [-22, -22, 5, 5, 3], [22, -22, 5, 5, 3], [-22, 22, 5, 5, 3], [22, 22, 5, 5, 3],
@@ -250,17 +258,21 @@ function skinColor() { return SKINS[settings.skin].color; }
 
 // ------------------------------------------------------------------ renderer / scene
 const canvas = $('c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+let pixelRatio = Math.min(window.devicePixelRatio || 1, 1.25);   // the game steps this down by itself if frames run slow
+renderer.setPixelRatio(pixelRatio);
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x101a40);
-scene.fog = new THREE.Fog(0x101a40, 26, 85);
+scene.background = new THREE.Color(0xf3eedd);
+scene.fog = new THREE.Fog(0xf3eedd, 30, 95);
+const INK = 0x1b1b2f;
+const inkMat = new THREE.MeshBasicMaterial({ color: INK, side: THREE.BackSide });   // inverted hull: a slightly bigger copy drawn inside out is a pen outline
+const inkFront = new THREE.MeshBasicMaterial({ color: INK });
 const camera = new THREE.PerspectiveCamera(settings.fov, 1, 0.05, 200);
 camera.rotation.order = 'YXZ';
 scene.add(camera);
 
-scene.add(new THREE.HemisphereLight(0xa8c4ff, 0x3a2a66, 1.5));
-const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xd8cfae, 0.76));
+const sun = new THREE.DirectionalLight(0xffffff, 0.4);
 sun.position.set(14, 30, 10);
 scene.add(sun);
 
@@ -273,15 +285,20 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// Floor: a generated grid texture, so there is no art to load.
-function gridTexture(fill, line) {
+// Floor: a generated sheet of paper, so there is no art to load. 'graph' is squared, 'lined' is a ruled pad with a red margin.
+function gridTexture(fill, line, style) {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
   const g = c.getContext('2d');
   g.fillStyle = fill; g.fillRect(0, 0, 256, 256);
-  g.strokeStyle = 'rgba(' + line + ',.9)'; g.lineWidth = 4; g.strokeRect(0, 0, 256, 256);
-  g.strokeStyle = 'rgba(' + line + ',.3)'; g.lineWidth = 1.5;
-  for (let i = 64; i < 256; i += 64) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 256); g.moveTo(0, i); g.lineTo(256, i); g.stroke(); }
+  g.strokeStyle = 'rgba(' + line + ',.5)'; g.lineWidth = 2;
+  for (let i = 32; i < 256; i += 32) {
+    g.beginPath(); g.moveTo(0, i); g.lineTo(256, i);
+    if (style !== 'lined') g.moveTo(i, 0), g.lineTo(i, 256);
+    g.stroke();
+  }
+  g.strokeStyle = 'rgba(' + line + ',.8)'; g.lineWidth = 4; g.strokeRect(0, 0, 256, 256);
+  if (style === 'lined') { g.strokeStyle = 'rgba(224,52,63,.7)'; g.lineWidth = 3; g.beginPath(); g.moveTo(8, 0); g.lineTo(8, 256); g.stroke(); }
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(HALF * 2 / 4, HALF * 2 / 4);
@@ -289,7 +306,7 @@ function gridTexture(fill, line) {
   return t;
 }
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(HALF * 2, HALF * 2),
-  new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.1 }));
+  new THREE.MeshLambertMaterial({ color: 0xe4e4e4 }));      // a touch under white, so lit paper does not clip to pure white
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
 
@@ -297,20 +314,19 @@ const obstacles = [];
 const obstacleMeshes = [];
 const mapObjects = [];
 let mapIdx = -1;
-function addBox(cx, cz, w, d, h, color, glow) {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
-    new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.35, roughness: 0.7, metalness: 0.1 }));
+function addBox(cx, cz, w, d, h, color) {
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color }));
   mesh.position.set(cx, h / 2, cz);
   scene.add(mesh);
-  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), new THREE.LineBasicMaterial({ color: glow }));
-  edges.position.copy(mesh.position);
-  scene.add(edges);
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(w + 0.3, h + 0.3, d + 0.3), inkMat);
+  hull.position.copy(mesh.position);
+  scene.add(hull);
   obstacles.push({ minX: cx - w / 2, maxX: cx + w / 2, minZ: cz - d / 2, maxZ: cz + d / 2 });
   obstacleMeshes.push(mesh);
-  mapObjects.push(mesh, edges);
+  mapObjects.push(mesh, hull);
 }
 function clearMap() {
-  for (const o of mapObjects) { scene.remove(o); o.geometry.dispose(); o.material.dispose(); }
+  for (const o of mapObjects) { scene.remove(o); o.geometry.dispose(); if (o.material !== inkMat) o.material.dispose(); }
   mapObjects.length = 0; obstacles.length = 0; obstacleMeshes.length = 0;
 }
 function applyMap(idx) {
@@ -322,7 +338,7 @@ function applyMap(idx) {
   clearMap();
   scene.background.setHex(m.bg); scene.fog.color.setHex(m.bg);
   const old = floor.material.map;
-  floor.material.map = gridTexture(m.floor, m.line);
+  floor.material.map = gridTexture(m.floor, m.line, m.style);
   floor.material.needsUpdate = true;
   if (old) old.dispose();
   const T = 2;
@@ -356,19 +372,27 @@ function resolve(p, r) {
 }
 
 // Liang-Barsky: does the segment a->b cross any obstacle (in the XZ plane)?
+// Slab test with no allocation: it runs per enemy, per frame, so arrays here showed up as garbage-collection stutter.
 function segBlocked(ax, az, bx, bz) {
   const dx = bx - ax, dz = bz - az;
-  for (const o of obstacles) {
-    const p = [-dx, dx, -dz, dz];
-    const q = [ax - o.minX, o.maxX - ax, az - o.minZ, o.maxZ - az];
-    let t0 = 0, t1 = 1, hit = true;
-    for (let i = 0; i < 4; i++) {
-      if (p[i] === 0) { if (q[i] < 0) { hit = false; break; } continue; }
-      const r = q[i] / p[i];
-      if (p[i] < 0) { if (r > t1) { hit = false; break; } if (r > t0) t0 = r; }
-      else { if (r < t0) { hit = false; break; } if (r < t1) t1 = r; }
+  for (let k = 0; k < obstacles.length; k++) {
+    const o = obstacles[k];
+    let t0 = 0, t1 = 1;
+    if (dx === 0) { if (ax < o.minX || ax > o.maxX) continue; }
+    else {
+      let a = (o.minX - ax) / dx, b = (o.maxX - ax) / dx;
+      if (a > b) { const s = a; a = b; b = s; }
+      if (a > t0) t0 = a; if (b < t1) t1 = b;
+      if (t0 > t1) continue;
     }
-    if (hit && t0 <= t1) return true;
+    if (dz === 0) { if (az < o.minZ || az > o.maxZ) continue; }
+    else {
+      let a = (o.minZ - az) / dz, b = (o.maxZ - az) / dz;
+      if (a > b) { const s = a; a = b; b = s; }
+      if (a > t0) t0 = a; if (b < t1) t1 = b;
+      if (t0 > t1) continue;
+    }
+    return true;
   }
   return false;
 }
@@ -441,11 +465,11 @@ const sfx = {
 
 // ------------------------------------------------------------------ weapons
 const WEAPONS = [
-  { name: 'PISTOL', auto: false, rate: 0.22, dmg: 30, pellets: 1, spread: 0.004, mag: 12, reload: 1.1, reserve: Infinity, kick: 0.012, zoom: 1.15, body: 0x4a5aa8, len: 0.7, sound: 'pistol' },
-  { name: 'RIFLE', auto: true, rate: 0.09, dmg: 22, pellets: 1, spread: 0.010, mag: 30, reload: 1.5, reserve: 150, kick: 0.010, zoom: 1.35, body: 0x3a4690, len: 1, sound: 'rifle' },
-  { name: 'SHOTGUN', auto: false, rate: 0.85, dmg: 13, pellets: 8, spread: 0.055, mag: 8, reload: 2.1, reserve: 40, kick: 0.05, zoom: 1.1, body: 0x8a5a2a, len: 1.2, sound: 'shotgun' },
-  { name: 'SMG', auto: true, rate: 0.06, dmg: 13, pellets: 1, spread: 0.022, mag: 40, reload: 1.4, reserve: 200, kick: 0.006, zoom: 1.2, body: 0x2a7a6a, len: 0.85, sound: 'smg' },
-  { name: 'SNIPER', auto: false, rate: 1.1, dmg: 95, pellets: 1, spread: 0.001, mag: 5, reload: 2.4, reserve: 25, kick: 0.06, zoom: 3.6, body: 0x5a2a8a, len: 1.5, sound: 'sniper', scope: true },
+  { name: 'PISTOL', auto: false, rate: 0.22, dmg: 30, pellets: 1, spread: 0.004, mag: 12, reload: 1.1, reserve: Infinity, kick: 0.012, zoom: 1.15, body: 0x8fb4ff, len: 0.7, sound: 'pistol' },
+  { name: 'RIFLE', auto: true, rate: 0.09, dmg: 22, pellets: 1, spread: 0.010, mag: 30, reload: 1.5, reserve: 150, kick: 0.010, zoom: 1.35, body: 0x7f9cf5, len: 1, sound: 'rifle' },
+  { name: 'SHOTGUN', auto: false, rate: 0.85, dmg: 13, pellets: 8, spread: 0.055, mag: 8, reload: 2.1, reserve: 40, kick: 0.05, zoom: 1.1, body: 0xf0a860, len: 1.2, sound: 'shotgun' },
+  { name: 'SMG', auto: true, rate: 0.06, dmg: 13, pellets: 1, spread: 0.022, mag: 40, reload: 1.4, reserve: 200, kick: 0.006, zoom: 1.2, body: 0x6fd0b0, len: 0.85, sound: 'smg' },
+  { name: 'SNIPER', auto: false, rate: 1.1, dmg: 95, pellets: 1, spread: 0.001, mag: 5, reload: 2.4, reserve: 25, kick: 0.06, zoom: 3.6, body: 0xb48cf0, len: 1.5, sound: 'sniper', scope: true },
 ];
 const wState = WEAPONS.map(() => ({ ammo: 0, reserve: 0, owned: false }));
 let cur = 1, reloadT = 0, cooldown = 0, mouseDown = false, aim = false, recoil = 0, shake = 0;
@@ -454,8 +478,11 @@ function giveWeapon(i) { const s = wState[i]; s.owned = true; s.ammo = WEAPONS[i
 
 // Viewmodel
 const gun = new THREE.Group();
-const gunBody = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 0.5), new THREE.MeshStandardMaterial({ color: 0x3a4690, emissive: 0x1a2250, roughness: 0.5 }));
-const gunTrim = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.025, 0.4), new THREE.MeshBasicMaterial({ color: 0x35e6ff }));
+const gunBody = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 0.5), new THREE.MeshLambertMaterial({ color: 0x7f9cf5 }));
+const gunOutline = new THREE.Mesh(gunBody.geometry, inkMat);
+gunOutline.scale.set(1.35, 1.25, 1.06);
+gunBody.add(gunOutline);
+const gunTrim = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.025, 0.4), new THREE.MeshBasicMaterial({ color: 0x2a4bd7 }));
 gunTrim.position.set(0, 0.06, -0.02);
 const flash = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.2), new THREE.MeshBasicMaterial({ color: 0xfff2a0, transparent: true, opacity: 0.85, depthWrite: false }));
 flash.position.set(0, 0.02, -0.46); flash.visible = false;
@@ -481,25 +508,31 @@ const GEO = {
   gem: new THREE.OctahedronGeometry(0.42),
   crate: new THREE.BoxGeometry(0.8, 0.4, 0.4),
   nade: new THREE.SphereGeometry(0.14, 10, 8),
+  eye: new THREE.SphereGeometry(0.045, 8, 6),
   ball: new THREE.SphereGeometry(1, 18, 12),
 };
 const TYPES = {
-  grunt:  { hp: 60,  speed: 3.3, color: 0xff4d6d, scale: 1.0,  ranged: true,  dmg: 7,  rate: 1.3, keep: 11, pts: 100, label: 'GRUNT' },
-  runner: { hp: 35,  speed: 6.3, color: 0xffd23f, scale: 0.85, ranged: false, dmg: 9,  rate: 0.6, keep: 0,  pts: 120, label: 'RUNNER' },
-  tank:   { hp: 200, speed: 2.2, color: 0xb15cff, scale: 1.35, ranged: true,  dmg: 12, rate: 1.1, keep: 14, pts: 250, label: 'TANK' },
-  boss:   { hp: 900, speed: 2.7, color: 0xff2d2d, scale: 2.0,  ranged: true,  dmg: 14, rate: 0.7, keep: 12, pts: 1500, label: 'BOSS' },
+  grunt:  { hp: 60,  speed: 3.3, color: 0xff8fa3, scale: 1.0,  ranged: true,  dmg: 7,  rate: 1.3, keep: 11, pts: 100, label: 'GRUNT' },
+  runner: { hp: 35,  speed: 6.3, color: 0xffe066, scale: 0.85, ranged: false, dmg: 9,  rate: 0.6, keep: 0,  pts: 120, label: 'RUNNER' },
+  tank:   { hp: 200, speed: 2.2, color: 0xb39ddb, scale: 1.35, ranged: true,  dmg: 12, rate: 1.1, keep: 14, pts: 250, label: 'TANK' },
+  boss:   { hp: 900, speed: 2.7, color: 0xff6b6b, scale: 2.0,  ranged: true,  dmg: 14, rate: 0.7, keep: 12, pts: 1500, label: 'BOSS' },
 };
 const enemies = [];
 
 function makeEnemy(typeName, x, z, wave) {
   const t = TYPES[typeName];
   const g = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: t.color, emissive: t.color, emissiveIntensity: 0.35, roughness: 0.55 });
-  const headMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: t.color, emissiveIntensity: 0.25, roughness: 0.4 });
+  const mat = new THREE.MeshLambertMaterial({ color: t.color, emissive: t.color, emissiveIntensity: 0.08 });
+  const headMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
   const body = new THREE.Mesh(GEO.body, mat); body.position.y = 0.95;
   const head = new THREE.Mesh(GEO.head, headMat); head.position.y = 1.8;
   const legL = new THREE.Mesh(GEO.leg, mat); legL.position.set(-0.2, 0.6, 0);
   const legR = new THREE.Mesh(GEO.leg, mat); legR.position.set(0.2, 0.6, 0);
+  // pen outlines, and a face so each one reads as a character
+  for (const [m, grow] of [[body, 1.14], [head, 1.16], [legL, 1.2], [legR, 1.2]]) {
+    const o = new THREE.Mesh(m.geometry, inkMat); o.scale.setScalar(grow); m.add(o);
+  }
+  for (const sx of [-0.1, 0.1]) { const eye = new THREE.Mesh(GEO.eye, inkFront); eye.position.set(sx, 0.04, 0.262); head.add(eye); }
   const barMat = new THREE.MeshBasicMaterial({ color: 0x3dff7a, side: THREE.DoubleSide });
   const bar = new THREE.Mesh(GEO.bar, barMat); bar.position.y = 2.4;
   g.add(body, head, legL, legR, bar);
@@ -532,12 +565,29 @@ function burstMat(color) {
   if (!burstMats.has(color)) burstMats.set(color, new THREE.MeshBasicMaterial({ color }));
   return burstMats.get(color);
 }
+// Tracers are pooled: a shotgun blast is eight of them, and building a geometry and material per line was a steady source of garbage.
+const tracerPool = [];
 function addTracer(from, to, color) {
-  const g = new THREE.BufferGeometry().setFromPoints([from, to]);
-  const m = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.9 });
-  const l = new THREE.Line(g, m);
-  scene.add(l);
-  tracers.push({ l, t: 0.08 });
+  let t = tracerPool.pop();
+  if (!t) {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+    const l = new THREE.Line(g, new THREE.LineBasicMaterial({ transparent: true }));
+    l.frustumCulled = false;
+    t = { l, t: 0 };
+  }
+  const a = t.l.geometry.attributes.position;
+  a.array[0] = from.x; a.array[1] = from.y; a.array[2] = from.z;
+  a.array[3] = to.x; a.array[4] = to.y; a.array[5] = to.z;
+  a.needsUpdate = true;
+  t.l.material.color.setHex(color); t.l.material.opacity = 0.9;
+  t.t = 0.08;
+  scene.add(t.l);
+  tracers.push(t);
+}
+function releaseTracer(i) {
+  const t = tracers[i];
+  scene.remove(t.l); tracers.splice(i, 1); tracerPool.push(t);
 }
 function burst(pos, color, n, speed) {
   for (let i = 0; i < n; i++) {
@@ -550,17 +600,18 @@ function burst(pos, color, n, speed) {
 }
 
 const PICKS = {
-  health:  { color: 0x1fff9a, geo: 'pack',  label: '+25 HEALTH' },
-  ammo:    { color: 0xffd23f, geo: 'pack',  label: 'AMMO' },
-  grenade: { color: 0xa0ff3d, geo: 'nade',  label: '+2 GRENADES' },
-  weapon:  { color: 0xff3d9a, geo: 'crate', label: 'WEAPON CRATE' },
-  speed:   { color: 0x35e6ff, geo: 'gem',   label: 'SPEED BOOST' },
-  damage:  { color: 0xff4d2d, geo: 'gem',   label: 'DOUBLE DAMAGE' },
-  shield:  { color: 0x6d8bff, geo: 'gem',   label: 'SHIELD' },
+  health:  { color: 0x5ccf7a, geo: 'pack',  label: '+25 HEALTH' },
+  ammo:    { color: 0xffc93c, geo: 'pack',  label: 'AMMO' },
+  grenade: { color: 0x8bd43a, geo: 'nade',  label: '+2 GRENADES' },
+  weapon:  { color: 0xf08a1c, geo: 'crate', label: 'AMMO CRATE' },
+  speed:   { color: 0x4dc3ff, geo: 'gem',   label: 'SPEED BOOST' },
+  damage:  { color: 0xff5a4d, geo: 'gem',   label: 'DOUBLE DAMAGE' },
+  shield:  { color: 0x7b8cff, geo: 'gem',   label: 'SHIELD' },
 };
 function spawnPickup(kind, x, z) {
   const k = PICKS[kind];
-  const m = new THREE.Mesh(GEO[k.geo], new THREE.MeshStandardMaterial({ color: k.color, emissive: k.color, emissiveIntensity: 0.8 }));
+  const m = new THREE.Mesh(GEO[k.geo], new THREE.MeshLambertMaterial({ color: k.color, emissive: k.color, emissiveIntensity: 0.25 }));
+  const o = new THREE.Mesh(GEO[k.geo], inkMat); o.scale.setScalar(1.2); m.add(o);
   if (k.geo === 'nade') m.scale.setScalar(2.2);
   m.position.set(x, 0.6, z);
   scene.add(m);
@@ -568,7 +619,7 @@ function spawnPickup(kind, x, z) {
 }
 function rollKind(weaponWeight) {
   const table = [['health', 30], ['ammo', 28], ['grenade', 12], ['speed', 8], ['damage', 8], ['shield', 8],
-    ['weapon', wState.some((s) => !s.owned) ? weaponWeight : 0]];
+    ['weapon', weaponWeight]];
   let total = 0; for (const r of table) total += r[1];
   let roll = Math.random() * total;
   for (const [kind, w] of table) { roll -= w; if (roll < 0) return kind; }
@@ -581,13 +632,11 @@ function collect(kind) {
   else if (kind === 'speed') player.fx.speed = 12;
   else if (kind === 'damage') player.fx.damage = 12;
   else if (kind === 'shield') player.shield = MAX_SHIELD;
-  else if (kind === 'weapon' && wState.some((s) => !s.owned)) {
-    const i = rnd(wState.map((s, n) => n).filter((n) => !wState[n].owned));
-    giveWeapon(i); switchWeapon(i);
-    banner('NEW: ' + WEAPONS[i].name); feed('NEW WEAPON  ' + WEAPONS[i].name, 'good');
-    sfx.power(); return;
-  } else {                                           // ammo, or a crate when everything is owned
-    wState.forEach((s, i) => { if (s.owned && isFinite(WEAPONS[i].reserve)) s.reserve = Math.min(WEAPONS[i].reserve, s.reserve + WEAPONS[i].mag * 2); });
+  else {                                             // ammo tops up a little, an ammo crate refills every reserve
+    wState.forEach((s, i) => {
+      if (!isFinite(WEAPONS[i].reserve)) return;
+      s.reserve = kind === 'weapon' ? WEAPONS[i].reserve : Math.min(WEAPONS[i].reserve, s.reserve + WEAPONS[i].mag * 2);
+    });
   }
   (kind === 'speed' || kind === 'damage' || kind === 'shield' ? sfx.power : sfx.pickup)();
   banner(kind === 'ammo' || kind === 'weapon' ? '+AMMO' : label); feed(label, 'good');
@@ -596,7 +645,8 @@ function collect(kind) {
 function throwGrenade() {
   if (grenades <= 0 || state !== 'play') return;
   grenades--;
-  const m = new THREE.Mesh(GEO.nade, new THREE.MeshStandardMaterial({ color: 0xa0ff3d, emissive: 0xa0ff3d, emissiveIntensity: 0.9 }));
+  const m = new THREE.Mesh(GEO.nade, new THREE.MeshLambertMaterial({ color: 0x8bd43a, emissive: 0x8bd43a, emissiveIntensity: 0.3 }));
+  const o = new THREE.Mesh(GEO.nade, inkMat); o.scale.setScalar(1.35); m.add(o);
   _f.set(0, 0, -1).applyQuaternion(camera.quaternion);
   const p = new THREE.Vector3(player.pos.x + _f.x * 0.7, player.pos.y + EYE - 0.15, player.pos.z + _f.z * 0.7);
   m.position.copy(p);
@@ -626,8 +676,7 @@ function explode(pos) {
 }
 
 function clearFx() {
-  tracers.forEach((t) => { scene.remove(t.l); t.l.geometry.dispose(); t.l.material.dispose(); });
-  tracers.length = 0;
+  while (tracers.length) releaseTracer(tracers.length - 1);
   bursts.forEach((b) => scene.remove(b.m)); bursts.length = 0;
   pickups.forEach((p) => { scene.remove(p.m); p.m.material.dispose(); }); pickups.length = 0;
   thrown.forEach((g) => { scene.remove(g.m); g.m.material.dispose(); }); thrown.length = 0;
@@ -665,8 +714,7 @@ function resetGame() {
   elapsed = 0; timeLeft = TIME_START; deaths = 0; bossPending = false; ambientT = 12; streak = 0; streakT = 0;
   grenades = 2;
   wState.forEach((s) => { s.owned = false; s.ammo = 0; s.reserve = 0; });
-  giveWeapon(0); giveWeapon(1);
-  if (DEMO && PARAMS.has('all')) WEAPONS.forEach((w, i) => giveWeapon(i));
+  WEAPONS.forEach((w, i) => giveWeapon(i));       // every weapon is there from the start; keys 1-5 pick one
   cur = DEMO && PARAMS.has('w') ? clampInt(PARAMS.get('w'), 0, WEAPONS.length - 1, 1) : 1;
   reloadT = 0; cooldown = 0; recoil = 0; shake = 0; aim = false;
   if (runMode !== 'survival') { wave = 3; spawnT = 1; }
@@ -934,7 +982,7 @@ function killEnemy(e, head) {
   }
   if (e.type === 'boss') {
     feed('BOSS DOWN', 'streak'); banner('BOSS DOWN');
-    spawnPickup('health', p.x + 1, p.z); spawnPickup(wState.some((s) => !s.owned) ? 'weapon' : 'ammo', p.x - 1, p.z);
+    spawnPickup('health', p.x + 1, p.z); spawnPickup('weapon', p.x - 1, p.z);
   } else if (Math.random() < 0.24) {
     spawnPickup(rollKind(6), p.x, p.z);
   }
@@ -983,7 +1031,7 @@ function updatePlayer(dt) {
   camera.fov += (target - camera.fov) * Math.min(1, dt * 14);
   if (Math.abs(camera.fov - lastFov) > 0.01) { camera.updateProjectionMatrix(); lastFov = camera.fov; }
   const scoped = aim && W.scope && camera.fov < settings.fov * 0.6;
-  $('scope').style.display = scoped ? 'block' : 'none';
+  setStyle('scope', 'display', scoped ? 'block' : 'none');
   gun.visible = !scoped;
 
   player.pitch = Math.max(-1.5, Math.min(1.5, player.pitch));
@@ -1065,26 +1113,26 @@ function updateEnemy(e, dt) {
   e.bar.scale.x = Math.max(0.001, e.hp / e.maxHp);
   e.barMat.color.setHex(e.hp / e.maxHp < 0.35 ? 0xff5a3d : 0x3dff7a);
 
-  const base = e.wind ? 1.3 : 0.35;
-  const target = e.flash > 0 ? 1.8 : base;
-  e.mats[0].emissiveIntensity = target;
+  e.mats[0].emissiveIntensity = e.flash > 0 ? 0.9 : (e.wind ? 0.45 : 0.08);
   if (e.flash > 0) e.flash -= dt;
 
   const dmg = e.t.dmg * DIFFS[settings.diff].dmg;
   e.cd -= dt;
   if (e.t.ranged) {
-    if (e.cd <= 0.3 && !e.wind && dist < 38 && !segBlocked(pos.x, pos.z, player.pos.x, player.pos.z)) e.wind = true;
+    // Line of sight is only worked out in the last moments before a shot, not every frame.
+    const clear = e.cd <= 0.35 && !segBlocked(pos.x, pos.z, player.pos.x, player.pos.z);
+    if (e.cd <= 0.3 && !e.wind && dist < 38 && clear) e.wind = true;
     if (e.cd <= 0) {
       e.cd = e.t.rate * (0.8 + Math.random() * 0.5);
       if (e.wind) {
         e.wind = false;
-        if (!segBlocked(pos.x, pos.z, player.pos.x, player.pos.z)) {
+        if (clear) {
           const from = new THREE.Vector3(pos.x + nx * 0.5, 1.3 * e.t.scale, pos.z + nz * 0.5);
           const chance = Math.max(0.2, 0.78 - dist * 0.022);
           const hit = Math.random() < chance;
           const to = new THREE.Vector3(player.pos.x, player.pos.y + EYE - 0.3, player.pos.z);
           if (!hit) to.add(new THREE.Vector3((Math.random() - 0.5) * 3, (Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 3));
-          addTracer(from, to, e.t.color);
+          addTracer(from, to, 0xd93a4a);
           sfx.enemy();
           if (hit) hurt(dmg);
         }
@@ -1111,9 +1159,9 @@ function updateWaves(dt) {
     player.hp = Math.min(100, player.hp + 20);
     score += wave * 50;
     banner('WAVE CLEAR');
-    // A wave is worth a reward: a weapon while there is one left to find, plus ammo.
+    // A wave is worth a reward: a power-up, plus ammo.
     const a = randomOpenSpot(0), b = randomOpenSpot(0);
-    if (a) spawnPickup(wState.some((s) => !s.owned) ? 'weapon' : 'grenade', a.x, a.z);
+    if (a) spawnPickup(rnd(['speed', 'damage', 'shield', 'grenade']), a.x, a.z);
     if (b) spawnPickup('ammo', b.x, b.z);
   }
 }
@@ -1173,7 +1221,7 @@ function updateFx(dt) {
   for (let i = tracers.length - 1; i >= 0; i--) {
     const t = tracers[i]; t.t -= dt;
     t.l.material.opacity = Math.max(0, t.t / 0.08);
-    if (t.t <= 0) { scene.remove(t.l); t.l.geometry.dispose(); t.l.material.dispose(); tracers.splice(i, 1); }
+    if (t.t <= 0) releaseTracer(i);
   }
   for (let i = bursts.length - 1; i >= 0; i--) {
     const b = bursts[i]; b.life -= dt;
@@ -1196,13 +1244,20 @@ function setText(id, value) {
   if (hudCache[id] === value) return;
   hudCache[id] = value; $(id).textContent = value;
 }
+// Style writes are cached too: touching the DOM every frame makes the browser re-style the page over a canvas that is already busy.
+function setStyle(id, prop, value) {
+  const k = id + '.' + prop;
+  if (hudCache[k] === value) return;
+  hudCache[k] = value; $(id).style[prop] = value;
+}
 function fmtTime(s) { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 function updateHud() {
   const hp = Math.max(0, Math.ceil(player.hp));
   setText('hpText', String(hp));
-  $('hpFill').style.width = hp + '%';
-  $('hpFill').classList.toggle('low', hp <= 30);
-  $('shFill').style.width = Math.round(player.shield / MAX_SHIELD * 100) + '%';
+  setStyle('hpFill', 'width', hp + '%');
+  const low = hp <= 30;
+  if (hudCache.low !== low) { hudCache.low = low; $('hpFill').classList.toggle('low', low); }
+  setStyle('shFill', 'width', Math.round(player.shield / MAX_SHIELD * 100) + '%');
   if (runMode === 'survival') {
     setText('waveText', (bossPending || (enemies.some((e) => e.type === 'boss')) ? 'BOSS ' : 'WAVE ') + Math.max(1, wave));
     setText('leftText', String(enemies.length + toSpawn)); setText('leftLabel', 'HOSTILES LEFT');
@@ -1268,7 +1323,7 @@ document.addEventListener('pointerlockchange', () => {
   } else if (state === 'play') {
     state = 'paused'; mouseDown = false; aim = false;
     for (const k in keys) keys[k] = false;
-    $('scope').style.display = 'none'; gun.visible = true;
+    setStyle('scope', 'display', 'none'); gun.visible = true;
     showMenu('PAUSED', 'Click to resume', 'RESUME', 'pause');
   }
 });
@@ -1301,6 +1356,7 @@ window.addEventListener('keydown', (e) => {
   if (state !== 'play') return;
   if (e.code === 'KeyR') startReload();
   if (e.code === 'KeyG') throwGrenade();
+  if (e.code === 'KeyF') { showFps = !showFps; setStyle('fps', 'display', showFps ? 'block' : 'none'); }
   if (e.code === 'KeyQ') cycleWeapon(1);
   const m = /^Digit([1-9])$/.exec(e.code);
   if (m) switchWeapon(+m[1] - 1);
@@ -1310,16 +1366,29 @@ window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; m
 
 // ------------------------------------------------------------------ main loop
 let last = performance.now();
+let perfSum = 0, perfN = 0, showFps = PARAMS.has('fps');
+// Adaptive resolution: if frames average slower than ~40 fps, render at a lower pixel ratio. Only ever steps down, so it cannot oscillate.
+function perf(rawDt) {
+  perfSum += Math.min(rawDt, 0.1); perfN++;      // a long gap is a tab that was in the background, not a slow frame
+  if (perfN < 45) return;
+  const avg = perfSum / perfN; perfSum = 0; perfN = 0;
+  if (showFps) { setText('fps', Math.round(1 / avg) + ' fps  x' + pixelRatio.toFixed(2)); }
+  if (avg > 0.025 && pixelRatio > 0.6) {
+    pixelRatio = Math.max(0.6, pixelRatio - 0.2);
+    renderer.setPixelRatio(pixelRatio); resize();
+  }
+}
 function loop(now) {
   requestAnimationFrame(loop);
-  const dt = Math.min(0.05, (now - last) / 1000);
+  const rawDt = (now - last) / 1000;
+  const dt = Math.min(0.05, rawDt);
   last = now;
-  if (state === 'play') update(dt);
+  if (state === 'play') { update(dt); perf(rawDt); }
   else {
     // keep the camera parked and the world gently alive behind the menu
     clock += dt;
     if (Math.abs(camera.fov - settings.fov) > 0.01) { camera.fov = settings.fov; camera.updateProjectionMatrix(); lastFov = settings.fov; }
-    $('scope').style.display = 'none'; gun.visible = true;
+    setStyle('scope', 'display', 'none'); gun.visible = true;
     camera.position.set(player.pos.x, EYE, player.pos.z);
     camera.rotation.set(0, Math.sin(clock * 0.2) * 0.6, 0);
     updateFx(dt);
@@ -1330,11 +1399,12 @@ function loop(now) {
 applyMap(settings.map);
 player.pos.set(MAPS[settings.map].spawn[0], 0, MAPS[settings.map].spawn[1]);
 applyWeaponLook();
+if (showFps) setStyle('fps', 'display', 'block');
 if (DEMO) {
   resetGame(); state = 'play'; hideMenu();
   if (PARAMS.has('end')) setTimeout(() => endRun('RUN ENDED', 'demo', true), +PARAMS.get('end') * 1000);
 } else {
-  showMenu('NEON ARENA', 'Pick a mode, then drop in. Aim for the head.', 'CLICK TO PLAY', 'start');
+  showMenu('SCRIBBLE ARENA', 'Pick a mode, then drop in. Aim for the head.', 'CLICK TO PLAY', 'start');
 }
 requestAnimationFrame(loop);
 })();
